@@ -1,5 +1,6 @@
 deps/downloads
 deps/src
 deps/usr
+deps/build.log
 deps/deps.jl
 src/vector_sizes.jl

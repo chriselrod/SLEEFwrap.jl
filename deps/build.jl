@@ -32,42 +32,42 @@ provides(BuildProcess,
 register_size = simdbytes()
 if register_size == 8
     vector_sizes_string = """
-    const SIZES = Tuple{DataType,Symbol,Symbol}[
-        (Float64, Symbol(), Symbol()),
-        (Float32, :f, Symbol())
+    const SIZES = [
+        (Float64, Float64, Symbol(), Symbol()),
+        (Float32, Float32, :f, Symbol())
     ]
     """
 elseif register_size == 16
     vector_sizes_string = """
-    const SIZES = Tuple{DataType,Symbol,Symbol}[
-        (Float64, Symbol(), Symbol()),
-        (Float32, :f, Symbol()),
-        (__m128d, :d2, :avx2128),
-        (__m128,  :f4, :avx2128)
+    const SIZES = [
+        (Float64, Float64, Symbol(), Symbol()),
+        (Float32, Float32, :f, Symbol()),
+        (__m128d, m128d, :d2, :avx2128),
+        (__m128,  m128,  :f4, :avx2128)
     ]
     """
 elseif register_size == 32
     vector_sizes_string = """
-    const SIZES = Tuple{DataType,Symbol,Symbol}[
-        (Float64, Symbol(), Symbol()),
-        (Float32, :f, Symbol()),
-        (__m128d, :d2, :avx2128),
-        (__m128,  :f4, :avx2128),
-        (__m256d, :d4, :avx2),
-        (__m256,  :f8, :avx2)
+    const SIZES = [
+        (Float64, Float64, Symbol(), Symbol()),
+        (Float32, Float32, :f, Symbol()),
+        (__m128d, m128d, :d2, :avx2128),
+        (__m128,  m128,  :f4, :avx2128),
+        (__m256d, m256d, :d4, :avx2),
+        (__m256,  m256,  :f8, :avx2)
     ]
     """
 elseif register_size == 64
     vector_sizes_string = """
-    const SIZES = Tuple{DataType,Symbol,Symbol}[
-        (Float64, Symbol(), Symbol()),
-        (Float32, :f, Symbol()),
-        (__m128d, :d2, :avx2128),
-        (__m128,  :f4, :avx2128),
-        (__m256d, :d4, :avx2),
-        (__m256,  :f8, :avx2),
-        (__m256d, :d8, :avx512f),
-        (__m256,  :f16,:avx512f)
+    const SIZES = [
+        (Float64, Float64, Symbol(), Symbol()),
+        (Float32, Float32, :f, Symbol()),
+        (__m128d, m128d, :d2, :avx2128),
+        (__m128,  m128,  :f4, :avx2128),
+        (__m256d, m256d, :d4, :avx2),
+        (__m256,  m256,  :f8, :avx2),
+        (__m512d, m512d, :d8, :avx512f),
+        (__m512,  m512,  :f16,:avx512f)
     ]
     """
 
