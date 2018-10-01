@@ -11,28 +11,15 @@ const __m256  = Vec{ 8, Float32}
 const __m512d = Vec{ 8, Float64}
 const __m512  = Vec{16, Float64}
 
+include("vector_sizes.jl")
 
 const PREFIX = :Sleef_
 # const BASE_ACCURACIES = [
 #     :_u10,
 #     :_u35
 # ]
-const SIZES = Tuple{DataType,Symbol,Symbol}[
-    (Float64, Symbol(), Symbol()),
-    (Float32, :f, Symbol()),
-]
-if REGISTER_SIZE >= 16
-    push!(SIZES, (__m128d, :d2, :avx2128))
-    push!(SIZES, (__m128,  :f4, :avx2128))
-    if REGISTER_SIZE >= 32
-        push!(SIZES, (__m256d, :d4, :avx2))
-        push!(SIZES, (__m256,  :f8, :avx2))
-        if REGISTER_SIZE >= 64
-            push!(SIZES, (__m256d, :d8, :avx512f))
-            push!(SIZES, (__m256,  :f16,:avx512f))
-        end
-    end
-end
+
+
 # pattern is SLEEF name, Julia name
 const UNARY_OUT_FUNCTIONS = [
     (:sin,:sin),

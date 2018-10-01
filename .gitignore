@@ -2,3 +2,4 @@ deps/downloads
 deps/src
 deps/usr
 deps/deps.jl
+src/vector_sizes.jl
