@@ -1,14 +1,13 @@
 module SLEEFwrap
 
-using SIMD
+const Vec{N, T} = NTuple{N,Core.VecElement{T}}
 
-
-const __m128d, m128d = NTuple{2, Core.VecElement{Float64}}, Vec{ 2, Float64}
-const __m128,  m128  = NTuple{4, Core.VecElement{Float32}}, Vec{ 4, Float32}
-const __m256d, m256d = NTuple{4, Core.VecElement{Float64}}, Vec{ 4, Float64}
-const __m256,  m256  = NTuple{8, Core.VecElement{Float32}}, Vec{ 8, Float32}
-const __m512d, m512d = NTuple{8, Core.VecElement{Float64}}, Vec{ 8, Float64}
-const __m512,  m512  = NTuple{16,Core.VecElement{Float32}}, Vec{16, Float32}
+const __m128d = Vec{ 2, Float64}
+const __m128  = Vec{ 4, Float32}
+const __m256d = Vec{ 4, Float64}
+const __m256  = Vec{ 8, Float32}
+const __m512d = Vec{ 8, Float64}
+const __m512  = Vec{16, Float32}
 
 include(joinpath("..", "deps", "deps.jl"))
 include("vector_sizes.jl")
@@ -36,7 +35,7 @@ const UNARY_OUT_FUNCTIONS = [
     (:exp2,:exp2,:_u10),
     (:exp10,:exp10,:_u10),
     (:expm1,:expm1,:_u10),
-    (:sqrt,:sqrt,Symbol()),
+    (:sqrt,:sqrt,:_),
     (:sqrt,:sqrt_fast,:_u35),
     (:cbrt,:cbrt,:_u10),
     (:cbrt,:cbrt_fast,:_u35),
@@ -59,10 +58,10 @@ const UNARY_OUT_FUNCTIONS = [
     (:erfc,:erfc,:_u15),
     (:tgamma,:gamma,:_u10),
     (:lgamma,:lgamma,:_u10),
-    (:trunc,:trunc,Symbol()),
-    (:floor,:floor,Symbol()),
-    (:ceil,:ceil,Symbol()),
-    (:fabs,:abs,Symbol())
+    (:trunc,:trunc,:_),
+    (:floor,:floor,:_),
+    (:ceil,:ceil,:_),
+    (:fabs,:abs,:_)
 ]
 
 const BINARY_OUT_FUNCTIONS = [
@@ -70,7 +69,7 @@ const BINARY_OUT_FUNCTIONS = [
     (:sincos,:sincos_fast,:_u35),
     (:sincospi,:sincospi,:_u05),
     (:sincospi,:sincospi_fast,:_u35),
-    (:modf,:modf,Symbol())
+    (:modf,:modf,:_)
 ]
 const BINARY_IN_FUNCTIONS = [
     (:pow, :pow, :_u10),
@@ -78,48 +77,30 @@ const BINARY_IN_FUNCTIONS = [
     (:atan2, :atan_fast, :_u35),
     (:hypot,:hypot, :_05),
     (:hypot,:hypot_fast, :_35),
-    (:fmod,:mod, Symbol()),
-    (:copysign,:copysign, Symbol())
+    (:fmod,:mod, :_),
+    (:copysign,:copysign, :_)
 ]
 
 ## Special cases: :round, :rint, :ldexp
-for (coretype, vectype, func_suffix, suffix) ∈ SIZES
+for (vectype, func_suffix, suffix) ∈ SIZES
     for (SLEEF_name,Julia_name,accuracy) ∈ UNARY_OUT_FUNCTIONS
         func_name = QuoteNode(Symbol(PREFIX, SLEEF_name, func_suffix, accuracy, suffix))
-        if coretype != vectype
-            @eval function ($Julia_name)(a::($vectype))
-                $(vectype)(ccall(($func_name, libsleef), $coretype, ($coretype,), a))
-                # $(vectype)(($Julia_name)(a.elts))
-            end
-        end
-        @eval function ($Julia_name)(a::($coretype))
-            ccall(($func_name, libsleef), $coretype, ($coretype,), a)
+        @eval function ($Julia_name)(a::($vectype))
+            ccall(($func_name, libsleef), $vectype, ($vectype,), a)
         end
     end
 
     for (SLEEF_name,Julia_name,accuracy) ∈ BINARY_OUT_FUNCTIONS
         func_name = QuoteNode(Symbol(PREFIX, SLEEF_name, func_suffix, accuracy, suffix))
-        if coretype != vectype
-            @eval function ($Julia_name)(a::($vectype))
-                s, c = ccall(($func_name, libsleef), $(Tuple{coretype,coretype}), ($coretype,), a.elts)
-                $(vectype)(s), $(vectype)(c)
-            end
-        end
-        @eval function ($Julia_name)(a::($coretype))
-            ccall(($func_name, libsleef), $(Tuple{coretype,coretype}), ($coretype,), a)
+        @eval function ($Julia_name)(a::($vectype))
+            ccall(($func_name, libsleef), $(Tuple{vectype,vectype}), ($vectype,), a)
         end
     end
 
     for (SLEEF_name,Julia_name,accuracy) ∈ BINARY_IN_FUNCTIONS
         func_name = QuoteNode(Symbol(PREFIX, SLEEF_name, func_suffix, accuracy, suffix))
-        if coretype != vectype
-            @eval function ($Julia_name)(a::($vectype), b::($vectype))
-                $(vectype)(ccall(($func_name, libsleef), $coretype, ($coretype,$coretype), a, b))
-                # $(vectype)(($Julia_name)(a.elts, b.elts))
-            end
-        end
-        @eval function ($Julia_name)(a::($coretype), b::($coretype))
-            ccall(($func_name, libsleef), $coretype, ($coretype,$coretype), a, b)
+        @eval function ($Julia_name)(a::($vectype), b::($vectype))
+            ccall(($func_name, libsleef), $vectype, ($vectype,$vectype), a, b)
         end
     end
 end

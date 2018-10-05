@@ -74,12 +74,6 @@ uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 [[SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 
-[[SIMD]]
-deps = ["InteractiveUtils", "Pkg", "Test"]
-git-tree-sha1 = "fa5d0745cbbc55313fcf894bc342d0eabf0cb485"
-uuid = "fdea26ae-647d-5447-a871-4b548cad5224"
-version = "1.2.0"
-
 [[Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 
@@ -109,7 +103,7 @@ uuid = "30578b45-9adc-5946-b283-645ec420af67"
 version = "0.4.0"
 
 [[UUIDs]]
-deps = ["Random", "SHA"]
+deps = ["Random"]
 uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 
 [[Unicode]]
