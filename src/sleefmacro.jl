@@ -1,76 +1,76 @@
-const SLEEFDict = Dict{Symbol,Symbol}(
-    :sin => :sin,
-    :sinpi => :sinpi,
-    :cos => :cos,
-    :cospi => :cospi,
-    :tan => :tan,
-    :log => :log,
-    :log10 => :log10,
-    :log2 => :log2,
-    :log1p => :log1p,
-    :exp => :exp,
-    :exp2 => :exp2,
-    :exp10 => :exp10,
-    :expm1 => :expm1,
-    :sqrt => :sqrt,
-    :cbrt => :cbrt,
-    :asin => :asin,
-    :acos => :acos,
-    :atan => :atan,
-    :sinh => :sinh,
-    :cosh => :cosh,
-    :tanh => :tanh,
-    :asinh => :asinh,
-    :acosh => :acosh,
-    :atanh => :atanh,
-    :erf => :erf,
-    :erfc => :erfc,
-    :gamma => :gamma,
-    :lgamma => :lgamma,
-    :trunc => :trunc,
-    :floor => :floor,
-    :ceil => :ceil,
-    :abs => :abs,
-    :pow => :pow,
-    :hypot => :hypot_fast,
-    :mod => :mod
+const SLEEFDict = Dict{Symbol,Expr}(
+    :sin => :(SLEEFwrap.sin),
+    :sinpi => :(SLEEFwrap.sinpi),
+    :cos => :(SLEEFwrap.cos),
+    :cospi => :(SLEEFwrap.cospi),
+    :tan => :(SLEEFwrap.tan),
+    :log => :(SLEEFwrap.log),
+    :log10 => :(SLEEFwrap.log10),
+    :log2 => :(SLEEFwrap.log2),
+    :log1p => :(SLEEFwrap.log1p),
+    :exp => :(SLEEFwrap.exp),
+    :exp2 => :(SLEEFwrap.exp2),
+    :exp10 => :(SLEEFwrap.exp10),
+    :expm1 => :(SLEEFwrap.expm1),
+    :sqrt => :(SLEEFwrap.sqrt),
+    :cbrt => :(SLEEFwrap.cbrt),
+    :asin => :(SLEEFwrap.asin),
+    :acos => :(SLEEFwrap.acos),
+    :atan => :(SLEEFwrap.atan),
+    :sinh => :(SLEEFwrap.sinh),
+    :cosh => :(SLEEFwrap.cosh),
+    :tanh => :(SLEEFwrap.tanh),
+    :asinh => :(SLEEFwrap.asinh),
+    :acosh => :(SLEEFwrap.acosh),
+    :atanh => :(SLEEFwrap.atanh),
+    :erf => :(SLEEFwrap.erf),
+    :erfc => :(SLEEFwrap.erfc),
+    :gamma => :(SLEEFwrap.gamma),
+    :lgamma => :(SLEEFwrap.lgamma),
+    :trunc => :(SLEEFwrap.trunc),
+    :floor => :(SLEEFwrap.floor),
+    :ceil => :(SLEEFwrap.ceil),
+    :abs => :(SLEEFwrap.abs),
+    :pow => :(SLEEFwrap.pow),
+    :hypot => :(SLEEFwrap.hypot_fast),
+    :mod => :(SLEEFwrap.mod)
 )
-const SLEEFDictFast = Dict{Symbol,Symbol}(
-    :sin => :sin_fast,
-    :sinpi => :sinpi_fast,
-    :cos => :cos_fast,
-    :cospi => :cospi_fast,
-    :tan => :tan_fast,
-    :log => :log_fast,
-    :log10 => :log10,
-    :log2 => :log2,
-    :log1p => :log1p,
-    :exp => :exp,
-    :exp2 => :exp2,
-    :exp10 => :exp10,
-    :expm1 => :expm1,
-    :sqrt => :sqrt, # faster than sqrt_fast
-    :cbrt => :cbrt_fast,
-    :asin => :asin_fast,
-    :acos => :acos_fast,
-    :atan => :atan_fast,
-    :sinh => :sinh_fast,
-    :cosh => :cosh_fast,
-    :tanh => :tanh_fast,
-    :asinh => :asinh,
-    :acosh => :acosh,
-    :atanh => :atanh,
-    :erf => :erf,
-    :erfc => :erfc,
-    :gamma => :gamma,
-    :lgamma => :lgamma,
-    :trunc => :trunc,
-    :floor => :floor,
-    :ceil => :ceil,
-    :abs => :abs,
-    :pow => :pow,
-    :hypot => :hypot_fast,
-    :mod => :mod
+const SLEEFDictFast = Dict{Symbol,Expr}(
+    :sin => :(SLEEFwrap.sin_fast),
+    :sinpi => :(SLEEFwrap.sinpi_fast),
+    :cos => :(SLEEFwrap.cos_fast),
+    :cospi => :(SLEEFwrap.cospi_fast),
+    :tan => :(SLEEFwrap.tan_fast),
+    :log => :(SLEEFwrap.log_fast),
+    :log10 => :(SLEEFwrap.log10),
+    :log2 => :(SLEEFwrap.log2),
+    :log1p => :(SLEEFwrap.log1p),
+    :exp => :(SLEEFwrap.exp),
+    :exp2 => :(SLEEFwrap.exp2),
+    :exp10 => :(SLEEFwrap.exp10),
+    :expm1 => :(SLEEFwrap.expm1),
+    :sqrt => :(SIMDPirates.sqrt), # faster than sqrt_fast
+    :cbrt => :(SLEEFwrap.cbrt_fast),
+    :asin => :(SLEEFwrap.asin_fast),
+    :acos => :(SLEEFwrap.acos_fast),
+    :atan => :(SLEEFwrap.atan_fast),
+    :sinh => :(SLEEFwrap.sinh_fast),
+    :cosh => :(SLEEFwrap.cosh_fast),
+    :tanh => :(SLEEFwrap.tanh_fast),
+    :asinh => :(SLEEFwrap.asinh),
+    :acosh => :(SLEEFwrap.acosh),
+    :atanh => :(SLEEFwrap.atanh),
+    :erf => :(SLEEFwrap.erf),
+    :erfc => :(SLEEFwrap.erfc),
+    :gamma => :(SLEEFwrap.gamma),
+    :lgamma => :(SLEEFwrap.lgamma),
+    :trunc => :(SLEEFwrap.trunc),
+    :floor => :(SLEEFwrap.floor),
+    :ceil => :(SLEEFwrap.ceil),
+    :abs => :(SLEEFwrap.abs),
+    :pow => :(SLEEFwrap.pow),
+    :hypot => :(SLEEFwrap.hypot_fast),
+    :mod => :(SLEEFwrap.mod)
     # :copysign => :copysign
 )
 
@@ -183,6 +183,36 @@ function _spirate(ex, dict, macro_escape = true)
             ed = (macro_escape && isa(d, Symbol)) ? esc(d) : d
             ee = (macro_escape && isa(e, Symbol)) ? esc(e) : e
             return :(SIMDPirates.vmuladd($ea, $eb, SIMDPirates.vmuladd($ec, $ed, $ee)))
+        elseif @capture(x, a_ * b_ + c_ - c_) || @capture(x, c_ + a_ * b_ - c_) || @capture(x, a_ * b_ - c_ + c_) || @capture(x, - c_ + a_ * b_ + c_)
+            return :(SIMDPirates.vmul($a, $b))
+        elseif @capture(x, a_ * b_ + c_ - d_) || @capture(x, c_ + a_ * b_ - d_) || @capture(x, a_ * b_ - d_ + c_) || @capture(x, - d_ + a_ * b_ + c_) || @capture(x, SIMDPirates.vsub(SIMDPirates.vmuladd(a_, b_, c_), d_))
+            return :(SIMDPirates.vmuladd($a, $b, SIMDPirates.vsub($c, $d)))
+        elseif @capture(x, a_ += b_)
+            ea = isa(a, Symbol) ? esc(a) : a
+            eb = isa(b, Symbol) ? esc(b) : b
+            return :($ea = $(esc(SIMDPirates.vadd))($ea, $eb))
+        elseif @capture(x, a_ -= b_)
+            ea = isa(a, Symbol) ? esc(a) : a
+            eb = isa(b, Symbol) ? esc(b) : b
+            return :($ea = $(esc(SIMDPirates.vsub))($ea, $eb))
+        elseif @capture(x, a_ *= b_)
+            ea = isa(a, Symbol) ? esc(a) : a
+            eb = isa(b, Symbol) ? esc(b) : b
+            return :($ea = $(esc(SIMDPirates.vmul))($ea, $eb))
+        elseif @capture(x, a_ /= b_)
+            ea = isa(a, Symbol) ? esc(a) : a
+            eb = isa(b, Symbol) ? esc(b) : b
+            return :($ea = $(esc(SIMDPirates.vdiv))($ea, $eb))
+        # elseif isa(x, Symbol)
+        #     if occursin("@", string(x))
+        #         if macro_escape && (x != :@spirate) && (x != :@restrict_simd)
+        #             return esc(x)
+        #         else
+        #             return x
+        #         end
+        #     else
+        #         return get(VECTOR_SYMBOLS, x, get(dict, x, macro_escape ? esc(x) : x))
+        #     end
         elseif isa(x, Symbol) && !occursin("@", string(x))
             return get(VECTOR_SYMBOLS, x, get(dict, x, macro_escape ? esc(x) : x))
         else

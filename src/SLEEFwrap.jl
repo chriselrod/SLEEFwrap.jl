@@ -1,11 +1,12 @@
 module SLEEFwrap
 
+using SIMDPirates
 import MacroTools: @capture, postwalk, prewalk
-#using SIMDPirates
+using SIMDPirates: Vec
 
 export @sleef, @fastsleef, @spirate, @spiratef, @vectorize
 
-const Vec{N, T} = NTuple{N,Core.VecElement{T}}
+# const Vec{N, T} = NTuple{N,Core.VecElement{T}}
 
 const __m64    = Vec{ 2, Float32}
 const __m128d  = Vec{ 2, Float64}
