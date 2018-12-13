@@ -1,6 +1,6 @@
 module SLEEFwrap
 
-using SIMDPirates
+using SIMDPirates, VectorizationBase
 import MacroTools: @capture, postwalk, prewalk
 using SIMDPirates: Vec
 
@@ -32,6 +32,7 @@ const NEXT = Dict{DataType,DataType}(
 include(joinpath("..", "deps", "deps.jl"))
 include("vector_sizes.jl")
 include("wrap_sleef_functions.jl")
+# include("utilities.jl")
 include("sleefmacro.jl")
 include("vectorize_loops.jl")
 

@@ -146,79 +146,32 @@ const VECTOR_SYMBOLS = Dict{Symbol,Expr}(
     :issubnormal => :(SIMDPirates.vissubnormal)
 )
 
-
 function _spirate(ex, dict, macro_escape = true)
-    # @show ex
-    # ex = postwalk(ex) do x
-    #     if @capture(x, vadd(vmul(a_, b_), c_)) || @capture(x, vadd(c_, vmul(a_, b_)))
-    #         ea = (macro_escape && isa(a, Symbol)) ? esc(a) : a
-    #         eb = (macro_escape && isa(b, Symbol)) ? esc(b) : b
-    #         ec = (macro_escape && isa(c, Symbol)) ? esc(c) : c
-    #         return :(vmuladd($ea, $eb, $ec))
-    #     elseif @capture(x, vadd(vmul(a_, b_), vmul(c_, d_), e_)) || @capture(x, vadd(vmul(a_, b_), e_, vmul(c_, d_))) || @capture(x, vadd(e_, vmul(a_, b_), vmul(c_, d_)))
-    #         ea = (macro_escape && isa(a, Symbol)) ? esc(a) : a
-    #         eb = (macro_escape && isa(b, Symbol)) ? esc(b) : b
-    #         ec = (macro_escape && isa(c, Symbol)) ? esc(c) : c
-    #         ed = (macro_escape && isa(d, Symbol)) ? esc(d) : d
-    #         ee = (macro_escape && isa(e, Symbol)) ? esc(e) : e
-    #         return :(vmuladd($ea, $eb, vmuladd($ec, $ed, $ee)))
-    #     elseif isa(x, Symbol) && !occursin("@", string(x))
-    #         return get(VECTOR_SYMBOLS, x, get(dict, x, macro_escape ? esc(x) : x))
-    #     else
-    #         return x
-    #     end
-    # end
-    # @show ex
     ex = postwalk(ex) do x
         # @show x
         if @capture(x, SIMDPirates.vadd(SIMDPirates.vmul(a_, b_), c_)) || @capture(x, SIMDPirates.vadd(c_, SIMDPirates.vmul(a_, b_)))
-            ea = (macro_escape && isa(a, Symbol)) ? esc(a) : a
-            eb = (macro_escape && isa(b, Symbol)) ? esc(b) : b
-            ec = (macro_escape && isa(c, Symbol)) ? esc(c) : c
-            return :(SIMDPirates.vmuladd($ea, $eb, $ec))
+            return :(SIMDPirates.vmuladd($a, $b, $c))
         elseif @capture(x, SIMDPirates.vadd(SIMDPirates.vmul(a_, b_), SIMDPirates.vmul(c_, d_), e_)) || @capture(x, SIMDPirates.vadd(SIMDPirates.vmul(a_, b_), e_, SIMDPirates.vmul(c_, d_))) || @capture(x, SIMDPirates.vadd(e_, SIMDPirates.vmul(a_, b_), SIMDPirates.vmul(c_, d_)))
-            ea = (macro_escape && isa(a, Symbol)) ? esc(a) : a
-            eb = (macro_escape && isa(b, Symbol)) ? esc(b) : b
-            ec = (macro_escape && isa(c, Symbol)) ? esc(c) : c
-            ed = (macro_escape && isa(d, Symbol)) ? esc(d) : d
-            ee = (macro_escape && isa(e, Symbol)) ? esc(e) : e
-            return :(SIMDPirates.vmuladd($ea, $eb, SIMDPirates.vmuladd($ec, $ed, $ee)))
+            return :(SIMDPirates.vmuladd($a, $b, SIMDPirates.vmuladd($c, $d, $e)))
         elseif @capture(x, a_ * b_ + c_ - c_) || @capture(x, c_ + a_ * b_ - c_) || @capture(x, a_ * b_ - c_ + c_) || @capture(x, - c_ + a_ * b_ + c_)
             return :(SIMDPirates.vmul($a, $b))
         elseif @capture(x, a_ * b_ + c_ - d_) || @capture(x, c_ + a_ * b_ - d_) || @capture(x, a_ * b_ - d_ + c_) || @capture(x, - d_ + a_ * b_ + c_) || @capture(x, SIMDPirates.vsub(SIMDPirates.vmuladd(a_, b_, c_), d_))
             return :(SIMDPirates.vmuladd($a, $b, SIMDPirates.vsub($c, $d)))
         elseif @capture(x, a_ += b_)
-            ea = isa(a, Symbol) ? esc(a) : a
-            eb = isa(b, Symbol) ? esc(b) : b
-            return :($ea = $(esc(SIMDPirates.vadd))($ea, $eb))
+            return :($a = SIMDPirates.vadd($a, $b))
         elseif @capture(x, a_ -= b_)
-            ea = isa(a, Symbol) ? esc(a) : a
-            eb = isa(b, Symbol) ? esc(b) : b
-            return :($ea = $(esc(SIMDPirates.vsub))($ea, $eb))
+            return :($a = SIMDPirates.vsub($a, $b))
         elseif @capture(x, a_ *= b_)
-            ea = isa(a, Symbol) ? esc(a) : a
-            eb = isa(b, Symbol) ? esc(b) : b
-            return :($ea = $(esc(SIMDPirates.vmul))($ea, $eb))
+            return :($a = SIMDPirates.vmul($a, $b))
         elseif @capture(x, a_ /= b_)
-            ea = isa(a, Symbol) ? esc(a) : a
-            eb = isa(b, Symbol) ? esc(b) : b
-            return :($ea = $(esc(SIMDPirates.vdiv))($ea, $eb))
-        # elseif isa(x, Symbol)
-        #     if occursin("@", string(x))
-        #         if macro_escape && (x != :@spirate) && (x != :@restrict_simd)
-        #             return esc(x)
-        #         else
-        #             return x
-        #         end
-        #     else
-        #         return get(VECTOR_SYMBOLS, x, get(dict, x, macro_escape ? esc(x) : x))
-        #     end
+            return :($a = SIMDPirates.vdiv($a, $b))
         elseif isa(x, Symbol) && !occursin("@", string(x))
-            return get(VECTOR_SYMBOLS, x, get(dict, x, macro_escape ? esc(x) : x))
+            return get(VECTOR_SYMBOLS, x, get(dict, x, x))
         else
             return x
         end
     end
+    macro_escape ? esc(ex) : ex
 end
 
 macro spirate(ex) _spirate(ex, SLEEFDict) end
