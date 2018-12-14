@@ -51,7 +51,7 @@ function vectorize_body(N::Integer, T::DataType, unroll_factor, n, body)
         QQ -= 1
         Qr += unroll_factor
     end
-    V = Vec{W,T}
+    V = SVec{W,T}
 
 
     # body = _pirate(body)
@@ -82,15 +82,13 @@ function vectorize_body(N::Integer, T::DataType, unroll_factor, n, body)
     ### now we walk the body to look for reductions
     if length(reduction_symbols) > 0
         reductions = true
-
-
     else
         reductions = false
     end
 
     q = quote end
     for (sym, psym) ∈ indexed_expressions
-        push!(q.args, :( $psym = vectorizable($sym) ))
+        push!(q.args, :( $psym = SLEEFwrap.vectorizable($sym) ))
     end
 
 
@@ -162,15 +160,15 @@ function vectorize_body(N::Integer, T::DataType, unroll_factor, n, body)
     end
     q
 end
-function vectorize_body(N, Tsym::Symbol, n, body)
+function vectorize_body(N, Tsym::Symbol, uf, n, body)
     if Tsym == :Float32
-        vectorize_body(N, Float32, n, body)
+        vectorize_body(N, Float32, uf, n, body)
     elseif Tsym == :Float64
-        vectorize_body(N, Float64, n, body)
+        vectorize_body(N, Float64, uf, n, body)
     elseif Tsym == :ComplexF32
-        vectorize_body(N, ComplexF32, n, body)
+        vectorize_body(N, ComplexF32, uf, n, body)
     elseif Tsym == :ComplexF64
-        vectorize_body(N, ComplexF64, n, body)
+        vectorize_body(N, ComplexF64, uf, n, body)
     else
         throw("Type $Tsym is not supported.")
     end
@@ -181,7 +179,7 @@ function vectorize_body(N::Union{Symbol, Expr}, T::DataType, unroll_factor, n, b
     # @show W, REGISTER_SIZE, T_size
     # @show T
     WT = W * T_size
-    V = Vec{W,T}
+    V = SVec{W,T}
 
     # @show body
 
@@ -227,9 +225,9 @@ function vectorize_body(N::Union{Symbol, Expr}, T::DataType, unroll_factor, n, b
             Q += 1
         end
     end
-    pushfirst!(q.args, :((Q, r) = $(num_vector_load_expr(N, W))))
+    pushfirst!(q.args, :((Q, r) = $(num_vector_load_expr(:SLEEFwrap, N, W))))
     for (sym, psym) ∈ indexed_expressions
-        push!(q.args, :( $psym = vectorizable($sym) ))
+        push!(q.args, :( $psym = SLEEFwrap.vectorizable($sym) ))
     end
     # @show QQ, Qr, Q, r
     loop_body = [:($itersym = $isym), :($main_body)]
@@ -351,7 +349,7 @@ function _vectorloads!(main_body, indexed_expressions, reduction_expressions, re
             end
 
 
-            ej = isa(j, Number) ?  j - 1 :($j - 1)
+            ej = isa(j, Number) ?  j - 1 : :($j - 1)
             if i == declared_iter_sym
                 load_expr = :(vload($V, $pA, $itersym + $ej*SLEEFwrap.stride_row($A) + 1))
             elseif j == declared_iter_sym
@@ -386,6 +384,7 @@ function _vectorloads!(main_body, indexed_expressions, reduction_expressions, re
             end
 
             br = gensym(:B)
+            br2 = gensym(:B)
             coliter = gensym(:j)
             numiter = gensym(:numiter)
             stridesym = gensym(:stride)
@@ -393,7 +392,9 @@ function _vectorloads!(main_body, indexed_expressions, reduction_expressions, re
             pushexpr = quote
                 $numiter = SLEEFwrap.num_row_strides($A)
                 $stridesym = SLEEFwrap.stride_row($A)
-                $br = $B
+                $br = SLEEFwrap.extract_data.($B)
+                # $br2 = ntuple(b -> SLEEFwrap.extract_data(getindex($br,b)), Val(length($br)))
+                # $br2 = SLEEFwrap.extract_data.($br)
                 for $coliter ∈ 0:$numiter-1
                     SIMDPirates.vstore(getindex($br,1+$coliter), $pA, $isym + $stridesym * $coliter + 1)
                 end

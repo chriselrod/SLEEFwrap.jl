@@ -1,6 +1,6 @@
 module SLEEFwrap
 
-using SIMDPirates, VectorizationBase
+using SIMDPirates, VectorizationBase, SpecialFunctions, Base.FastMath
 import MacroTools: @capture, postwalk, prewalk
 using SIMDPirates: Vec
 
