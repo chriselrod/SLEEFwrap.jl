@@ -30,6 +30,20 @@ provides(BuildProcess,
 @BinDeps.install Dict(:libsleef => :libsleef)
 
 register_size = simdbytes()
+latest_instruction_set = (Symbol(),Symbol(),Symbol())
+instruction_sets = (
+    (:SSE2, (:sse2,Symbol(),Symbol())),
+    (:SSE41,(:sse4,Symbol(),Symbol())),
+    (:AVX,(:sse4,:avx,Symbol())),
+    (:FMA4,(:sse4,:fma4,Symbol())),
+    (:AVX2,(:avx2128,:avx2,Symbol())),
+    (:AVX512F,(:avx2128,:avx2,:avx512f))
+)
+for (insruction_set, instructions) ∈ instruction_sets
+    CpuId.cpufeature(instruction_set) || continue
+    global latest_instruction_set = instructions
+end
+
 if register_size == 8
     vector_sizes_string = """
     const REGISTER_SIZE = 8
@@ -46,8 +60,8 @@ elseif register_size == 16
     const SIZES = [
         (Float64, Symbol(), Symbol()),
         (Float32, :f, Symbol()),
-        (__m128d, :d2, :avx2128),
-        (__m128,  :f4, :avx2128)
+        (__m128d, :d2, :($(instructions[1]))),
+        (__m128,  :f4, :($(instructions[1])))
     ]
     """
 elseif register_size == 32
@@ -57,10 +71,10 @@ elseif register_size == 32
     const SIZES = [
         (Float64, Symbol(), Symbol()),
         (Float32, :f, Symbol()),
-        (__m128d, :d2, :avx2128),
-        (__m128,  :f4, :avx2128),
-        (__m256d, :d4, :avx2),
-        (__m256,  :f8, :avx2)
+        (__m128d, :d2, :($(instructions[1]))),
+        (__m128,  :f4, :($(instructions[1]))),
+        (__m256d, :d4, :($(instructions[2]))),
+        (__m256,  :f8, :($(instructions[2])))
     ]
     """
 elseif register_size == 64
@@ -70,12 +84,12 @@ elseif register_size == 64
     const SIZES = [
         (Float64, Symbol(), Symbol()),
         (Float32, :f, Symbol()),
-        (__m128d, :d2, :avx2128),
-        (__m128,  :f4, :avx2128),
-        (__m256d, :d4, :avx2),
-        (__m256,  :f8, :avx2),
-        (__m512d, :d8, :avx512f),
-        (__m512,  :f16,:avx512f)
+        (__m128d, :d2, :($(instructions[1]))),
+        (__m128,  :f4, :($(instructions[1]))),
+        (__m256d, :d4, :($(instructions[2]))),
+        (__m256,  :f8, :($(instructions[2]))),
+        (__m512d, :d8, :($(instructions[3]))),
+        (__m512,  :f16,:($(instructions[3])))
     ]
     """
 
