@@ -16,16 +16,26 @@ const __m256   = Vec{ 8, Float32}
 const __m512d  = Vec{ 8, Float64}
 const __m512   = Vec{16, Float32}
 const __m1024d = Vec{16, Float64}
-const __m1024  = Vec{32, Float64}
+const __m1024  = Vec{32, Float32}
 
+# const NEXT = Dict{DataType,DataType}(
+#     Float64 => __m128d,
+#     __m128d => __m256d,
+#     __m256d => __m512d,
+#     __m512d => __m1024d,
+#     Float32 => __m64,
+#     __m128  => __m256,
+#     __m256  => __m512,
+#     __m512  => __m1024
+# )
 const NEXT = Dict{DataType,DataType}(
     Float64 => __m128d,
     __m128d => __m256d,
     __m256d => __m512d,
     __m512d => __m1024d,
-    Float32 => __m64,
-    __m128  => __m256,
-    __m256  => __m512,
+    Float32 => NTuple{2,Float32},
+    __m128  => NTuple{2,__m128},
+    __m256  => NTuple{2,__m256},
     __m512  => __m1024
 )
 

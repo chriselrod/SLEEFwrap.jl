@@ -21,7 +21,7 @@ const UNARY_OUT_FUNCTIONS = [
     (:Base,:exp2,:exp2,:_u10),
     (:Base,:exp10,:exp10,:_u10),
     (:Base,:expm1,:expm1,:_u10),
-    (:Base,:sqrt,:sqrt,:_),
+    # (:Base,:sqrt,:sqrt,:_),
     # (:sqrt,:sqrt_fast,:_u35),
     (:Base,:cbrt,:cbrt,:_u10),
     (:FastMath,:cbrt,:cbrt_fast,:_u35),

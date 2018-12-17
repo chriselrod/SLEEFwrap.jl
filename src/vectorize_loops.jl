@@ -95,29 +95,29 @@ function vectorize_body(N::Integer, T::DataType, unroll_factor, n, body)
     # @show QQ, Qr, Q, r
     loop_body = [:($itersym = $isym), main_body]
     for unroll ∈ 1:unroll_factor-1
-        push!(loop_body, :($itersym = $isym + $(unroll*W*sizeof(T))))
+        push!(loop_body, :($itersym = $isym + $(unroll*W)))
         push!(loop_body, main_body)
     end
 
     if QQ > 0
         push!(q.args,
         quote
-            for $isym ∈ 0:$(unroll_factor*W*sizeof(T)):$((QQ-1)*unroll_factor*W*sizeof(T))
+            for $isym ∈ 1:$(unroll_factor*W):$(QQ*unroll_factor*W)
                 $(loop_body...)
             end
         end)
     end
-    for qri ∈ 0:Qr-1
+    for qri ∈ 1:Qr
         push!(q.args,
         quote
-            $itersym = $(QQ*unroll_factor*W*sizeof(T) + qri*W*sizeof(T))
+            $itersym = $(QQ*unroll_factor*W + qri*W)
             $main_body
         end)
     end
     if r > 0
         throw("Need to work on mask!")
         mask = mask_expr(W, r)
-        iter = Q * W * sizeof(T)
+        iter = Q * W
         r_body = quote end
         for b ∈ body
             push!(r_body.args, _spirate(prewalk(b) do x
@@ -131,9 +131,9 @@ function vectorize_body(N::Integer, T::DataType, unroll_factor, n, body)
                         pA = indexed_expressions[A]
                     end
                     if i == n
-                        return :(vstore($B, $pA, $iter + 1, $mask))
+                        return :(vstore($B, $pA, $iter, $mask))
                     else
-                        return :(vstore($B, $pA, $i*sizeof(eltype($A)) + 1, $mask))
+                        return :(vstore($B, $pA, $i, $mask))
                     end
                 elseif @capture(x, A_[i_])
                     if A ∉ keys(indexed_expressions)
@@ -145,11 +145,11 @@ function vectorize_body(N::Integer, T::DataType, unroll_factor, n, body)
                         pA = indexed_expressions[A]
                     end
                     if i == n
-                        return :(vload($V, $pA, $iter + 1, $mask))
+                        return :(vload($V, $pA, $iter, $mask))
                     else
                         # when loading something not indexed by the loop variable,
                         # we assume that the intension is to broadcast
-                        return :(vbroadcast($V, unsafe_load($pA + $i*sizeof(eltype($A)), $mask)))
+                        return :(vbroadcast($V, unsafe_load($pA + ($i-1)*sizeof(eltype($A)), $mask)))
                     end
                 else
                     return x
@@ -232,19 +232,19 @@ function vectorize_body(N::Union{Symbol, Expr}, T::DataType, unroll_factor, n, b
     # @show QQ, Qr, Q, r
     loop_body = [:($itersym = $isym), :($main_body)]
     for unroll ∈ 1:unroll_factor-1
-        push!(loop_body, :($itersym = $isym + $(unroll*W*sizeof(T))))
+        push!(loop_body, :($itersym = $isym + $(unroll*W)))
         push!(loop_body, :($main_body))
     end
     push!(q.args,
     quote
-        for $isym ∈ 0:$(unroll_factor*W*sizeof(T)):((QQ-1)*$(unroll_factor*W*sizeof(T)))
+        for $isym ∈ 1:$(unroll_factor*W):(Q*$(unroll_factor*W))
             $(loop_body...)
         end
     end)
     if unroll_factor > 1
         push!(q.args,
         quote
-            for $isym ∈ 0:Qr-1
+            for $isym ∈ 1:Qr
                 $itersym = QQ*$(unroll_factor*WT) + $isym*$WT
                 $main_body
             end
@@ -293,9 +293,9 @@ function _vectorloads!(main_body, indexed_expressions, reduction_expressions, re
                 pA = indexed_expressions[A]
             end
             if i == declared_iter_sym
-                return :(vstore($B, $pA, $itersym + 1))
+                return :(vstore($B, $pA, $itersym))
             else
-                return :(vstore($B, $pA, $i*sizeof(eltype($A)) + 1))
+                return :(vstore($B, $pA, $i))
             end
         elseif @capture(x, A_[i_,j_] = B_)
             if A ∉ keys(indexed_expressions)
@@ -306,9 +306,10 @@ function _vectorloads!(main_body, indexed_expressions, reduction_expressions, re
             end
             sym = gensym(Symbol(pA, :_, i))
             if i == declared_iter_sym
+                # then i gives the row number
+                # ej gives the number of columns the setindex! is shifted
                 ej = isa(j, Number) ? j - 1 : :($j - 1)
-                # assignment = :($pA + $itersym + $ej*SLEEFwrap.stride_row($A))
-                return :(vstore($B, $pA, $itersym + $ej*SLEEFwrap.stride_row($A) + 1))
+                return :(vstore($B, $pA, $itersym + $ej*SLEEFwrap.stride_row($A)))
             else
                 throw("Indexing columns with vectorized loop variable is not supported.")
             end
@@ -326,10 +327,11 @@ function _vectorloads!(main_body, indexed_expressions, reduction_expressions, re
 
             ## check to see if we are to do a vector load or a broadcast
             if i == declared_iter_sym
-                load_expr = :(vload($V, $pA, $itersym + 1))
+                load_expr = :(vload($V, $pA, $itersym))
             else
-                load_expr = :(vbroadcast($V, unsafe_load($pA + $i*sizeof(eltype($A)))))
+                load_expr = :(vbroadcast($V, unsafe_load($pA + ($i-1)*sizeof(eltype($A)))))
             end
+            # performs a CSE on load expressions
             if load_expr ∈ keys(loaded_exprs)
                 sym = loaded_exprs[load_expr]
             else
@@ -337,6 +339,7 @@ function _vectorloads!(main_body, indexed_expressions, reduction_expressions, re
                 loaded_exprs[load_expr] = sym
                 push!(main_body.args, :($sym = $load_expr))
             end
+            # return the symbol we assigned the load to.
             return sym
         elseif @capture(x, A_[i_, j_])
             if A ∉ keys(indexed_expressions)
@@ -351,7 +354,7 @@ function _vectorloads!(main_body, indexed_expressions, reduction_expressions, re
 
             ej = isa(j, Number) ?  j - 1 : :($j - 1)
             if i == declared_iter_sym
-                load_expr = :(vload($V, $pA, $itersym + $ej*SLEEFwrap.stride_row($A) + 1))
+                load_expr = :(vload($V, $pA, $itersym + $ej*SLEEFwrap.stride_row($A)))
             elseif j == declared_iter_sym
                 throw("Indexing columns with vectorized loop variable is not supported.")
             else
@@ -359,6 +362,7 @@ function _vectorloads!(main_body, indexed_expressions, reduction_expressions, re
                 # we assume that the intension is to broadcast
                 load_expr = :(vbroadcast($V, unsafe_load($pA + $i*sizeof(eltype($A)) + $ej*SLEEFwrap.stride_row($A))))
             end
+            # performs a CSE on load expressions
             if load_expr ∈ keys(loaded_exprs)
                 sym = loaded_exprs[load_expr]
             else
@@ -366,6 +370,7 @@ function _vectorloads!(main_body, indexed_expressions, reduction_expressions, re
                 loaded_exprs[load_expr] = sym
                 push!(main_body.args, :($sym = $load_expr))
             end
+            # return the symbol we assigned the load to.
             return sym
         elseif @capture(x, A_[i_,:] .= B_)
             ## Capture if there are multiple assignments...
@@ -380,7 +385,7 @@ function _vectorloads!(main_body, indexed_expressions, reduction_expressions, re
             if i == declared_iter_sym
                 isym = itersym
             else
-                isym = :($i*sizeof(eltype($A)))
+                isym = i
             end
 
             br = gensym(:B)
@@ -389,18 +394,18 @@ function _vectorloads!(main_body, indexed_expressions, reduction_expressions, re
             numiter = gensym(:numiter)
             stridesym = gensym(:stride)
 
-            pushexpr = quote
+            expr = quote
                 $numiter = SLEEFwrap.num_row_strides($A)
                 $stridesym = SLEEFwrap.stride_row($A)
                 $br = SLEEFwrap.extract_data.($B)
                 # $br2 = ntuple(b -> SLEEFwrap.extract_data(getindex($br,b)), Val(length($br)))
                 # $br2 = SLEEFwrap.extract_data.($br)
                 for $coliter ∈ 0:$numiter-1
-                    SIMDPirates.vstore(getindex($br,1+$coliter), $pA, $isym + $stridesym * $coliter + 1)
+                    SIMDPirates.vstore(getindex($br,1+$coliter), $pA, $isym + $stridesym * $coliter)
                 end
             end
 
-            return pushexpr
+            return expr
         elseif @capture(x, @nexprs N_ ex_)
             # println("Macroexpanding x:", x)
             # @show ex
