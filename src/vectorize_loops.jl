@@ -174,6 +174,7 @@ function vectorize_body(N, Tsym::Symbol, uf, n, body)
     end
 end
 function vectorize_body(N::Union{Symbol, Expr}, T::DataType, unroll_factor, n, body)
+    unroll_factor == 1 || throw("Only unroll factor of 1 is currently supported. Was set to $unroll_factor.")
     T_size = sizeof(T)
     W = REGISTER_SIZE ÷ T_size
     # @show W, REGISTER_SIZE, T_size
@@ -217,15 +218,18 @@ function vectorize_body(N::Union{Symbol, Expr}, T::DataType, unroll_factor, n, b
         reductions = false
     end
 
+    # q = quote
+    #     # QQ, Qr = divrem(Q, $unroll_factor)
+    #     # if r > 0
+    #     #     # $(unroll_factor == 1 ? :QQ : :Qr) += 1
+    #     #     Qr += 1
+    #     #     # Q += 1
+    #     # end
+    # end
+    # pushfirst!(q.args, :((Q, r) = $(num_vector_load_expr(:SLEEFwrap, N, W))))
     q = quote
-        QQ, Qr = divrem(Q, $unroll_factor)
-        if r > 0
-            # $(unroll_factor == 1 ? :QQ : :Qr) += 1
-            Qr += 1
-            Q += 1
-        end
+        (Q, r) = $(num_vector_load_expr(:SLEEFwrap, N, W))
     end
-    pushfirst!(q.args, :((Q, r) = $(num_vector_load_expr(:SLEEFwrap, N, W))))
     for (sym, psym) ∈ indexed_expressions
         push!(q.args, :( $psym = SLEEFwrap.vectorizable($sym) ))
     end
@@ -241,15 +245,15 @@ function vectorize_body(N::Union{Symbol, Expr}, T::DataType, unroll_factor, n, b
             $(loop_body...)
         end
     end)
-    if unroll_factor > 1
-        push!(q.args,
-        quote
-            for $isym ∈ 1:Qr
-                $itersym = QQ*$(unroll_factor*WT) + $isym*$WT
-                $main_body
-            end
-        end)
-    end
+    # if unroll_factor > 1
+    #     push!(q.args,
+    #     quote
+    #         for $isym ∈ 1:Qr
+    #             $itersym = QQ*$(unroll_factor*WT) + $isym*$WT
+    #             $main_body
+    #         end
+    #     end)
+    # end
     push!(q.args,
     quote
         for $n ∈ $N-r+1:$N

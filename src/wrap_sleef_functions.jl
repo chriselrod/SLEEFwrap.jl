@@ -98,8 +98,14 @@ for (mod,SLEEF_name,Julia_name,accuracy) ∈ UNARY_OUT_FUNCTIONS
     W = REGISTER_SIZE ÷ sizeof(Float32)
     while W >= 2
         @eval @inline $func_name(a::AbstractStructVec{$W,Float32}) = SVec($sleef_name(extract_data(a)))
+        if mod != :SLEEFwrap
+            @eval @inline $sleef_name(a::AbstractStructVec{$W,Float32}) = SVec($sleef_name(extract_data(a)))
+        end
         W >>= 1
         @eval @inline $func_name(a::AbstractStructVec{$W,Float64}) = SVec($sleef_name(extract_data(a)))
+        if mod != :SLEEFwrap
+            @eval @inline $sleef_name(a::AbstractStructVec{$W,Float64}) = SVec($sleef_name(extract_data(a)))
+        end
     end
 end
 
@@ -109,8 +115,14 @@ for (mod,SLEEF_name,Julia_name,accuracy) ∈ BINARY_OUT_FUNCTIONS
     W = REGISTER_SIZE ÷ sizeof(Float32)
     while W >= 2
         @eval @inline $func_name(a::AbstractStructVec{$W,Float32}) = SVec($sleef_name(extract_data(a)))
+        if mod != :SLEEFwrap
+            @eval @inline $sleef_name(a::AbstractStructVec{$W,Float32}) = SVec($sleef_name(extract_data(a)))
+        end
         W >>= 1
         @eval @inline $func_name(a::AbstractStructVec{$W,Float64}) = SVec($sleef_name(extract_data(a)))
+        if mod != :SLEEFwrap
+            @eval @inline $sleef_name(a::AbstractStructVec{$W,Float64}) = SVec($sleef_name(extract_data(a)))
+        end
     end
 end
 
@@ -126,9 +138,19 @@ for (mod,SLEEF_name,Julia_name,accuracy) ∈ BINARY_IN_FUNCTIONS[2:end]
         @eval @inline function $func_name(a::AbstractStructVec{$W,Float32}, b::AbstractStructVec{$W,Float32})
             SVec($sleef_name(extract_data(a),extract_data(b)))
         end
+        if mod != :SLEEFwrap
+            @eval @inline function $sleef_name(a::AbstractStructVec{$W,Float32}, b::AbstractStructVec{$W,Float32})
+                SVec($sleef_name(extract_data(a),extract_data(b)))
+            end
+        end
         W >>= 1
         @eval @inline function $func_name(a::AbstractStructVec{$W,Float64}, b::AbstractStructVec{$W,Float64})
             SVec($sleef_name(extract_data(a),extract_data(b)))
+        end
+        if mod != :SLEEFwrap
+            @eval @inline function $sleef_name(a::AbstractStructVec{$W,Float64}, b::AbstractStructVec{$W,Float64})
+                Vec($sleef_name(extract_data(a),extract_data(b)))
+            end
         end
     end
 end

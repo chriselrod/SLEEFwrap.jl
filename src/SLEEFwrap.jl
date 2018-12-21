@@ -4,7 +4,7 @@ using SIMDPirates, VectorizationBase, SpecialFunctions, Base.FastMath
 import MacroTools: @capture, postwalk, prewalk
 using SIMDPirates: Vec
 
-export @sleef, @fastsleef, @spirate, @spiratef, @vectorize
+export @sleef, @fastsleef, @spirate, @spiratef, @vectorize, vectorizable
 
 # const Vec{N, T} = NTuple{N,Core.VecElement{T}}
 

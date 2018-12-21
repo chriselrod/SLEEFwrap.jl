@@ -38,12 +38,12 @@ const SLEEFDict = Dict{Symbol,Expr}(
     :mod => :(SLEEFwrap.mod)
 )
 const SLEEFDictFast = Dict{Symbol,Expr}(
-    :sin => :(SLEEFwrap.sin_fast),
+    :sin => :(Base.FastMath.sin_fast),
     :sinpi => :(SLEEFwrap.sinpi_fast),
-    :cos => :(SLEEFwrap.cos_fast),
+    :cos => :(Base.FastMath.cos_fast),
     :cospi => :(SLEEFwrap.cospi_fast),
-    :tan => :(SLEEFwrap.tan_fast),
-    :log => :(SLEEFwrap.log_fast),
+    :tan => :(Base.FastMath.tan_fast),
+    :log => :(Base.FastMath.log_fast),
     :log10 => :(SLEEFwrap.log10),
     :log2 => :(SLEEFwrap.log2),
     :log1p => :(SLEEFwrap.log1p),
@@ -52,13 +52,13 @@ const SLEEFDictFast = Dict{Symbol,Expr}(
     :exp10 => :(SLEEFwrap.exp10),
     :expm1 => :(SLEEFwrap.expm1),
     :sqrt => :(SIMDPirates.sqrt), # faster than sqrt_fast
-    :cbrt => :(SLEEFwrap.cbrt_fast),
-    :asin => :(SLEEFwrap.asin_fast),
-    :acos => :(SLEEFwrap.acos_fast),
-    :atan => :(SLEEFwrap.atan_fast),
-    :sinh => :(SLEEFwrap.sinh_fast),
-    :cosh => :(SLEEFwrap.cosh_fast),
-    :tanh => :(SLEEFwrap.tanh_fast),
+    :cbrt => :(Base.FastMath.cbrt_fast),
+    :asin => :(Base.FastMath.asin_fast),
+    :acos => :(Base.FastMath.acos_fast),
+    :atan => :(Base.FastMath.atan_fast),
+    :sinh => :(Base.FastMath.sinh_fast),
+    :cosh => :(Base.FastMath.cosh_fast),
+    :tanh => :(Base.FastMath.tanh_fast),
     :asinh => :(SLEEFwrap.asinh),
     :acosh => :(SLEEFwrap.acosh),
     :atanh => :(SLEEFwrap.atanh),
@@ -70,10 +70,10 @@ const SLEEFDictFast = Dict{Symbol,Expr}(
     :floor => :(SLEEFwrap.floor),
     :ceil => :(SLEEFwrap.ceil),
     :abs => :(SLEEFwrap.abs),
-    :sincos => :(SLEEFwrap.sincos_fast),
+    :sincos => :(Base.FastMath.sincos_fast),
     :sincospi => :(SLEEFwrap.sincospi_fast),
     :pow => :(SLEEFwrap.pow),
-    :hypot => :(SLEEFwrap.hypot_fast),
+    :hypot => :(Base.FastMath.hypot_fast),
     :mod => :(SLEEFwrap.mod)
     # :copysign => :copysign
 )
@@ -149,6 +149,14 @@ const VECTOR_SYMBOLS = Dict{Symbol,Expr}(
     :isnan => :(SIMDPirates.visnan),
     :issubnormal => :(SIMDPirates.vissubnormal)
 )
+function horner(x, p...)
+    t = gensym(:t)
+    ex = p[end]
+    for i ∈ length(p)-1:-1:1
+        ex = :(SIMDPirates.vmuladd($t, $ex, $(p[i])))
+    end
+    Expr(:block, :($t = $x), ex)
+end
 
 function _spirate(ex, dict, macro_escape = true)
     ex = postwalk(ex) do x
@@ -169,6 +177,10 @@ function _spirate(ex, dict, macro_escape = true)
             return :($a = SIMDPirates.vmul($a, $b))
         elseif @capture(x, a_ /= b_)
             return :($a = SIMDPirates.vdiv($a, $b))
+        elseif @capture(x, @horner a__)
+            return horner(a...)
+        elseif @capture(x, Base.Math.muladd(a_, b_, c_))
+            return :( SIMDPirates.vmuladd($a, $b, $c) )
         elseif isa(x, Symbol) && !occursin("@", string(x))
             return get(VECTOR_SYMBOLS, x, get(dict, x, x))
         else
