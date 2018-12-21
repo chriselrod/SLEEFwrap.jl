@@ -165,6 +165,11 @@ function _spirate(ex, dict, macro_escape = true)
             return :(SIMDPirates.vmuladd($a, $b, $c))
         elseif @capture(x, SIMDPirates.vadd(SIMDPirates.vmul(a_, b_), SIMDPirates.vmul(c_, d_), e_)) || @capture(x, SIMDPirates.vadd(SIMDPirates.vmul(a_, b_), e_, SIMDPirates.vmul(c_, d_))) || @capture(x, SIMDPirates.vadd(e_, SIMDPirates.vmul(a_, b_), SIMDPirates.vmul(c_, d_)))
             return :(SIMDPirates.vmuladd($a, $b, SIMDPirates.vmuladd($c, $d, $e)))
+        elseif @capture(x, SIMDPirates.vadd(SIMDPirates.vmul(b_, c_), SIMDPirates.vmul(d_, e_), SIMDPirates.vmul(f_, g_), a_)) ||
+                @capture(x, SIMDPirates.vadd(SIMDPirates.vmul(b_, c_), SIMDPirates.vmul(d_, e_), a_, SIMDPirates.vmul(f_, g_))) ||
+                @capture(x, SIMDPirates.vadd(SIMDPirates.vmul(b_, c_), a_, SIMDPirates.vmul(d_, e_), SIMDPirates.vmul(f_, g_))) ||
+                @capture(x, SIMDPirates.vadd(a_, SIMDPirates.vmul(b_, c_), SIMDPirates.vmul(d_, e_), SIMDPirates.vmul(f_, g_)))
+            return :(SIMDPirates.vmuladd($g, $f, SIMDPirates.vmuladd($e, $d, SIMDPirates.vmuladd($c, $b, $a))))
         elseif @capture(x, a_ * b_ + c_ - c_) || @capture(x, c_ + a_ * b_ - c_) || @capture(x, a_ * b_ - c_ + c_) || @capture(x, - c_ + a_ * b_ + c_)
             return :(SIMDPirates.vmul($a, $b))
         elseif @capture(x, a_ * b_ + c_ - d_) || @capture(x, c_ + a_ * b_ - d_) || @capture(x, a_ * b_ - d_ + c_) || @capture(x, - d_ + a_ * b_ + c_) || @capture(x, SIMDPirates.vsub(SIMDPirates.vmuladd(a_, b_, c_), d_))
