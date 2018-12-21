@@ -39,7 +39,7 @@ instruction_sets = (
     (:AVX2,(:avx2128,:avx2,Symbol())),
     (:AVX512F,(:avx2128,:avx2,:avx512f))
 )
-for (insruction_set, instructions) ∈ instruction_sets
+for (instruction_set, instructions) ∈ instruction_sets
     CpuId.cpufeature(instruction_set) || continue
     global latest_instruction_set = instructions
 end
@@ -60,8 +60,8 @@ elseif register_size == 16
     const SIZES = [
         (Float64, Symbol(), Symbol()),
         (Float32, :f, Symbol()),
-        (__m128d, :d2, :($(instructions[1]))),
-        (__m128,  :f4, :($(instructions[1])))
+        (__m128d, :d2, :($(latest_instruction_set[1]))),
+        (__m128,  :f4, :($(latest_instruction_set[1])))
     ]
     """
 elseif register_size == 32
@@ -71,10 +71,10 @@ elseif register_size == 32
     const SIZES = [
         (Float64, Symbol(), Symbol()),
         (Float32, :f, Symbol()),
-        (__m128d, :d2, :($(instructions[1]))),
-        (__m128,  :f4, :($(instructions[1]))),
-        (__m256d, :d4, :($(instructions[2]))),
-        (__m256,  :f8, :($(instructions[2])))
+        (__m128d, :d2, :($(latest_instruction_set[1]))),
+        (__m128,  :f4, :($(latest_instruction_set[1]))),
+        (__m256d, :d4, :($(latest_instruction_set[2]))),
+        (__m256,  :f8, :($(latest_instruction_set[2])))
     ]
     """
 elseif register_size == 64
@@ -84,12 +84,12 @@ elseif register_size == 64
     const SIZES = [
         (Float64, Symbol(), Symbol()),
         (Float32, :f, Symbol()),
-        (__m128d, :d2, :($(instructions[1]))),
-        (__m128,  :f4, :($(instructions[1]))),
-        (__m256d, :d4, :($(instructions[2]))),
-        (__m256,  :f8, :($(instructions[2]))),
-        (__m512d, :d8, :($(instructions[3]))),
-        (__m512,  :f16,:($(instructions[3])))
+        (__m128d, :d2, :($(latest_instruction_set[1]))),
+        (__m128,  :f4, :($(latest_instruction_set[1]))),
+        (__m256d, :d4, :($(latest_instruction_set[2]))),
+        (__m256,  :f8, :($(latest_instruction_set[2]))),
+        (__m512d, :d8, :($(latest_instruction_set[3]))),
+        (__m512,  :f16,:($(latest_instruction_set[3])))
     ]
     """
 
