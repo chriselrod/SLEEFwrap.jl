@@ -29,9 +29,9 @@ const __m1024  = Vec{32, Float32}
 #     __m512  => __m1024
 # )
 const NEXT = Dict{DataType,DataType}(
-    Float64 => __m128d,
-    __m128d => __m256d,
-    __m256d => __m512d,
+    Float64 => NTuple{2,Float64},
+    __m128d => NTuple{2,__m128d},
+    __m256d => NTuple{2,__m256d},
     __m512d => __m1024d,
     Float32 => NTuple{2,Float32},
     __m128  => NTuple{2,__m128},

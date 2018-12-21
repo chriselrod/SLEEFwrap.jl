@@ -6,7 +6,7 @@ Returns the strides necessary to iterate across rows.
 Needs `@inferred` testing / that the compiler optimizes it away
 whenever size(A) is known at compile time. Seems to be the case for Julia 1.1.
 """
-@inline stride_row(A::AbstractArray) = sizeof(eltype(A)) * size(A,1)
+@inline stride_row(A::AbstractArray) = size(A,1)
 @inline function num_row_strides(A::AbstractArray)
     s = size(A)
     N = s[2]
