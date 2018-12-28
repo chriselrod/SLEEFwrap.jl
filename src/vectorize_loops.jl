@@ -260,7 +260,7 @@ function vectorize_body(N::Union{Symbol, Expr}, T::DataType, unroll_factor, n, b
     masked_loop_body = add_masks.(loop_body)
     push!(q.args, quote
         if r > 0
-            mask = SIMDPirates.vgreater_or_equal(
+            mask = SIMDPirates.vless_or_equal(
                 SIMDPirates.vsub(
                     $(Expr(:tuple, [:(Core.VecElement{$Itype}(($(Itype(w))))) for w ∈ 1:W]...) ),
                     unsafe_trunc($Itype, r) # unsafe trunc is safe unless CPU's vector width > 2^31. W just 2^4 for avx512 and Float32
