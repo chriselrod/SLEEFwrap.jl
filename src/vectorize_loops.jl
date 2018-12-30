@@ -149,7 +149,7 @@ function vectorize_body(N::Integer, T::DataType, unroll_factor, n, body)
                     else
                         # when loading something not indexed by the loop variable,
                         # we assume that the intension is to broadcast
-                        return :(SIMDPirates.vbroadcast($V, unsafe_load($pA + ($i-1)*sizeof(eltype($A)), $mask)))
+                        return :(SIMDPirates.vbroadcast($V, unsafe_load($pA, $i-1)))
                     end
                 else
                     return x
@@ -360,7 +360,7 @@ function _vectorloads!(main_body, indexed_expressions, reduction_expressions, re
             if i == declared_iter_sym
                 load_expr = :(SIMDPirates.vload($V, $pA, $itersym))
             else
-                load_expr = :(SIMDPirates.vbroadcast($V, unsafe_load($pA + ($i-1)*sizeof(eltype($A)))))
+                load_expr = :(SIMDPirates.vbroadcast($V, unsafe_load($pA, $i-1)))
             end
             # performs a CSE on load expressions
             if load_expr ∈ keys(loaded_exprs)
@@ -391,7 +391,7 @@ function _vectorloads!(main_body, indexed_expressions, reduction_expressions, re
             else
                 # when loading something not indexed by the loop variable,
                 # we assume that the intension is to broadcast
-                load_expr = :(SIMDPirates.vbroadcast($V, unsafe_load($pA + $i*sizeof(eltype($A)) + $ej*SLEEFwrap.stride_row($A))))
+                load_expr = :(SIMDPirates.vbroadcast($V, unsafe_load($pA, $i + $ej*SLEEFwrap.stride_row($A))))
             end
             # performs a CSE on load expressions
             if load_expr ∈ keys(loaded_exprs)
@@ -444,6 +444,10 @@ function _vectorloads!(main_body, indexed_expressions, reduction_expressions, re
             mx = Expr(:block, Any[ Base.Cartesian.inlineanonymous(ex,i) for i = 1:N ]...)
             # println("Macroexpanded x:", mx)
             return mx
+        elseif @capture(x, zero(T_))
+            return :(zero($V))
+        elseif @capture(x, one(T_))
+            return :(one($V))
         else
             # println("Returning x:", x)
             return x
