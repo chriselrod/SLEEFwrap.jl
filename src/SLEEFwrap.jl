@@ -1,10 +1,10 @@
 module SLEEFwrap
 
-using SIMDPirates, VectorizationBase, SpecialFunctions, Base.FastMath
+using SIMDPirates, VectorizationBase, SpecialFunctions, Base.FastMath, LoopVectorization
 import MacroTools: @capture, postwalk, prewalk
 using SIMDPirates: Vec
 
-export @sleef, @fastsleef, @spirate, @spiratef, @vectorize, vectorizable
+export @sleef, @fastsleef, @spirate, @spiratef, @vectorize, @cvectorize
 
 # const Vec{N, T} = NTuple{N,Core.VecElement{T}}
 

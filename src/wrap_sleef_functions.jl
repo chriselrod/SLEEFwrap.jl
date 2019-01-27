@@ -207,7 +207,7 @@ end
 @inline function Base.:^(a::AbstractStructVec, b::AbstractStructVec)
     SVec(pow(extract_data(a),extract_data(b)))
 end
-for (mod,SLEEF_name,Julia_name,accuracy) ∈ BINARY_IN_FUNCTIONS[2:end]
+for (mod,SLEEF_name,Julia_name,accuracy) ∈ BINARY_IN_FUNCTIONS#[2:end]
     func_name = :($mod.$Julia_name)
     sleef_name = :(SLEEFwrap.$Julia_name)
     W = REGISTER_SIZE ÷ sizeof(Float32)
@@ -215,18 +215,66 @@ for (mod,SLEEF_name,Julia_name,accuracy) ∈ BINARY_IN_FUNCTIONS[2:end]
         @eval @inline function $func_name(a::AbstractStructVec{$W,Float32}, b::AbstractStructVec{$W,Float32})
             SVec($sleef_name(extract_data(a),extract_data(b)))
         end
+        @eval @inline function $func_name(a::AbstractStructVec{$W,Float32}, b::Float32)
+            SVec($sleef_name(extract_data(a),SIMDPirates.vbroadcast(Vec{$W,Float32}, b)))
+        end
+        @eval @inline function $func_name(a::Float32, b::AbstractStructVec{$W,Float32})
+            SVec($sleef_name(SIMDPirates.vbroadcast(Vec{$W,Float32}, a), extract_data(b)))
+        end
+        @eval @inline function $func_name(a::AbstractSIMDVector{$W,Float32}, b::Float32)
+            $sleef_name(extract_data(a),SIMDPirates.vbroadcast(Vec{$W,Float32}, b))
+        end
+        @eval @inline function $func_name(a::Float32, b::AbstractSIMDVector{$W,Float32})
+            $sleef_name(SIMDPirates.vbroadcast(Vec{$W,Float32}, a), extract_data(b))
+        end
         if mod != :SLEEFwrap
             @eval @inline function $sleef_name(a::AbstractStructVec{$W,Float32}, b::AbstractStructVec{$W,Float32})
                 SVec($sleef_name(extract_data(a),extract_data(b)))
+            end
+            @eval @inline function $sleef_name(a::AbstractStructVec{$W,Float32}, b::Float32)
+                SVec($sleef_name(extract_data(a),SIMDPirates.vbroadcast(Vec{$W,Float32}, b)))
+            end
+            @eval @inline function $sleef_name(a::Float32, b::AbstractStructVec{$W,Float32})
+                SVec($sleef_name(SIMDPirates.vbroadcast(Vec{$W,Float32}, a), extract_data(b)))
+            end
+            @eval @inline function $sleef_name(a::AbstractSIMDVector{$W,Float32}, b::Float32)
+                $sleef_name(extract_data(a),SIMDPirates.vbroadcast(Vec{$W,Float32}, b))
+            end
+            @eval @inline function $sleef_name(a::Float32, b::AbstractSIMDVector{$W,Float32})
+                $sleef_name(SIMDPirates.vbroadcast(Vec{$W,Float32}, a), extract_data(b))
             end
         end
         W >>= 1
         @eval @inline function $func_name(a::AbstractStructVec{$W,Float64}, b::AbstractStructVec{$W,Float64})
             SVec($sleef_name(extract_data(a),extract_data(b)))
         end
+        @eval @inline function $func_name(a::AbstractStructVec{$W,Float64}, b::Float64)
+            SVec($sleef_name(extract_data(a),SIMDPirates.vbroadcast(Vec{$W,Float64}, b)))
+        end
+        @eval @inline function $func_name(a::Float64, b::AbstractStructVec{$W,Float64})
+            SVec($sleef_name(SIMDPirates.vbroadcast(Vec{$W,Float64}, a), extract_data(b)))
+        end
+        @eval @inline function $func_name(a::AbstractSIMDVector{$W,Float64}, b::Float64)
+            $sleef_name(extract_data(a),SIMDPirates.vbroadcast(Vec{$W,Float64}, b))
+        end
+        @eval @inline function $func_name(a::Float64, b::AbstractSIMDVector{$W,Float64})
+            $sleef_name(SIMDPirates.vbroadcast(Vec{$W,Float64}, a), extract_data(b))
+        end
         if mod != :SLEEFwrap
             @eval @inline function $sleef_name(a::AbstractStructVec{$W,Float64}, b::AbstractStructVec{$W,Float64})
                 Vec($sleef_name(extract_data(a),extract_data(b)))
+            end
+            @eval @inline function $sleef_name(a::AbstractStructVec{$W,Float64}, b::Float64)
+                SVec($sleef_name(extract_data(a),SIMDPirates.vbroadcast(Vec{$W,Float32}, b)))
+            end
+            @eval @inline function $sleef_name(a::Float64, b::AbstractStructVec{$W,Float64})
+                SVec($sleef_name(SIMDPirates.vbroadcast(Vec{$W,Float32}, a), extract_data(b)))
+            end
+            @eval @inline function $sleef_name(a::AbstractSIMDVector{$W,Float64}, b::Float64)
+                $sleef_name(extract_data(a),SIMDPirates.vbroadcast(Vec{$W,Float32}, b))
+            end
+            @eval @inline function $sleef_name(a::Float64, b::AbstractSIMDVector{$W,Float64})
+                $sleef_name(SIMDPirates.vbroadcast(Vec{$W,Float32}, a), extract_data(b))
             end
         end
     end
