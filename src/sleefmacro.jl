@@ -35,7 +35,9 @@ const SLEEFDict = Dict{Symbol,Expr}(
     :sincospi => :(SLEEFwrap.sincospi),
     :pow => :(SLEEFwrap.pow),
     :hypot => :(SLEEFwrap.hypot_fast),
-    :mod => :(SLEEFwrap.mod)
+    :mod => :(SLEEFwrap.mod),
+    :one => :(SIMDPirates.vone),
+    :zero => :(SIMDPirates.vzero)
 )
 const SLEEFDictFast = Dict{Symbol,Expr}(
     :sin => :(Base.FastMath.sin_fast),
@@ -74,7 +76,9 @@ const SLEEFDictFast = Dict{Symbol,Expr}(
     :sincospi => :(SLEEFwrap.sincospi_fast),
     :pow => :(SLEEFwrap.pow),
     :hypot => :(Base.FastMath.hypot_fast),
-    :mod => :(SLEEFwrap.mod)
+    :mod => :(SLEEFwrap.mod),
+    :one => :(SIMDPirates.vone),
+    :zero => :(SIMDPirates.vzero)
     # :copysign => :copysign
 )
 
