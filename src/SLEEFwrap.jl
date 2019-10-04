@@ -2,7 +2,7 @@ module SLEEFwrap
 
 using SIMDPirates, VectorizationBase, SpecialFunctions, Base.FastMath, LoopVectorization
 import MacroTools: @capture, postwalk, prewalk
-using SIMDPirates: Vec
+using VectorizationBase: AbstractStructVec
 
 export @sleef, @fastsleef, @spirate, @spiratef, @vectorize, @cvectorize
 
