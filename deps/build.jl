@@ -2,7 +2,7 @@ using BinDeps, CpuId
 
 @BinDeps.setup
 
-const VERSION = "3.4.0"
+const VERSION = "3.5.1"
 
 libsleef = library_dependency("libsleef")
 
@@ -20,7 +20,7 @@ provides(BuildProcess,
             CreateDirectory(builddir)
             @build_steps begin
                 ChangeDirectory(builddir)
-                `cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_DFT=FALSE -DCMAKE_INSTALL_PREFIX=$prefix ..`
+                `cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_DFT=TRUE -DCMAKE_INSTALL_PREFIX=$prefix ..`
                 `make -j$(1+Sys.CPU_THREADS)`
                 `make install`
             end
